@@ -21,9 +21,8 @@
                 var webSafe = webSafeColours();
 
                 $.each( webSafe, function( i, colour ){
-                    var hexColour = rgbToHex( colour[0], colour[1], colour[2] );
 
-                    drawHexagon(context, hexColour, x, y, tileSize );
+                    drawHexagon(context, colour, x, y, tileSize );
 
                     x += tileSize * 3;
 
@@ -39,6 +38,8 @@
             var numberOfSides = 6,
                 Xcenter = x + size,
                 Ycenter = y + size;
+
+            var hexColour = rgbToHex( colour[0], colour[1], colour[2] );
             
             ctx.beginPath();
             ctx.moveTo (Xcenter +  size * Math.cos(0), Ycenter +  size *  Math.sin(0));          
@@ -47,8 +48,12 @@
                 ctx.lineTo (Xcenter + size * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(i * 2 * Math.PI / numberOfSides));
             }
             
-            ctx.fillStyle = colour;
+            ctx.fillStyle = hexColour;
             ctx.fill();
+
+            ctx.font="10px Courier";
+            ctx.fillStyle = ( lightOrDark(  colour[0], colour[1], colour[2] ) === 'dark' ) ? '#FFF' : '#000' ;
+            ctx.fillText( hexColour, x + (size/2)-2 , y + size + 2);
         }
 
         function drawSquare(ctx, colour, x, y , size){
