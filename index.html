@@ -6,6 +6,7 @@
     <meta name="description" content="">
     <meta name="keywords" content="">
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link href='http://fonts.googleapis.com/css?family=Armata' rel='stylesheet' type='text/css'>
 
     <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -13,47 +14,87 @@
 
     <script type="text/javascript">
         $(document).ready( function(){
-                var canvas  = $("#picker")[0];
-                var context = canvas.getContext("2d");
-                var x = 0, y = 0, offset = 0;
-                var tileSize = 20;
+            var width   = $(window).width()  - 20,
+                height  = $(window).height() - 100,
+                wrapper = $('#picker');
 
-                var webSafe = webSafeColours();
+            wrapper.append('<canvas id="pickerCanvas" width="'+width+'px" height="'+height+'px"></canvas>');
 
-                $.each( webSafe, function( i, colour ){
+            doLayout();
 
-                    drawHexagon(context, colour, x, y, tileSize );
+            var resizeTimer;
 
-                    x += tileSize * 3;
-
-                    if( x >= $("#picker").width() - tileSize * 2 ){
-                        y += tileSize - 3;
-                        offset = ( offset === 0 ) ? 1.5 : 0;
-                        x = tileSize * offset;
-                    }
-                });
+            $(window).resize(function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function(){
+                    clearLayout();
+                    doLayout();   
+                }, 100);
+            });
         });
 
-        function drawHexagon(ctx, colour, x, y, size){
-            var numberOfSides = 6,
-                Xcenter = x + size,
+        function clearLayout(){
+            var canvas = $("#pickerCanvas")[0];
+            var ctx    = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        };
+
+        function doLayout(){
+            var width   = $(window).width()  - 20,
+                height  = $(window).height() - 100;
+
+            var canvas   = $("#pickerCanvas")[0],
+                context  = canvas.getContext("2d");
+                tileSize = Math.floor( Math.sqrt( ( ( width * height ) / 216 ) ) * 0.485 ),
+                offset   = 0,
+                x = y = 1;
+
+            context.canvas.width  = width;
+            context.canvas.height = height;
+
+            $.each( webSafeColours(), function( i, colour ){
+                drawPolygon(context, 6, colour, x, y, tileSize );
+
+                x += tileSize * 3.6;
+
+                if( x >= $("#picker").width() - tileSize * 2 ){
+                    y += tileSize + 2;
+                    offset = ( offset === 0 ) ? 1.8 : 0;
+                    x = (tileSize * offset) + 1;
+                }
+            });
+        };
+
+        function drawPolygon(ctx, sides, colour, x, y, size){
+            var Xcenter = x + size,
                 Ycenter = y + size;
 
             var hexColour = rgbToHex( colour[0], colour[1], colour[2] );
             
+            ctx.save(); 
             ctx.beginPath();
             ctx.moveTo (Xcenter +  size * Math.cos(0), Ycenter +  size *  Math.sin(0));          
             
-            for (var i = 1; i <= numberOfSides;i += 1) {
-                ctx.lineTo (Xcenter + size * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(i * 2 * Math.PI / numberOfSides));
+            for (var i = 1; i <= sides; i++) {
+                ctx.lineTo (Xcenter + size * Math.cos(i * 2 * Math.PI / sides), Ycenter + size * Math.sin(i * 2 * Math.PI / sides));
             }
-            
-            ctx.fillStyle = hexColour;
-            ctx.fill();
 
-            ctx.font="10px Courier";
-            ctx.fillStyle = ( lightOrDark(  colour[0], colour[1], colour[2] ) === 'dark' ) ? '#FFF' : '#000' ;
-            ctx.fillText( hexColour, x + (size/2)-2 , y + size + 2);
+            ctx.shadowBlur  = 4;
+            ctx.shadowColor = '#999';
+            ctx.fillStyle   = hexColour;
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth   = 1;
+
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.font         = Math.ceil(size / 2.5) + "px Courier";
+            ctx.textAlign    = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle    = ( lightOrDark(  colour[0], colour[1], colour[2] ) === 'dark' ) ? '#FFF' : '#000' ;
+
+            ctx.fillText( hexColour, x + size , y + size );
         }
 
         function drawSquare(ctx, colour, x, y , size){
@@ -73,8 +114,7 @@
                     }
                 }
             }
-            return colours;
-            return colours.sort( function(a,b){
+            return colours.sort( function(b,a){
                 return rgbToHsv(a[0], a[1], a[0])[2] - rgbToHsv(b[0], b[1], b[0])[2];
             });
         }
@@ -126,20 +166,58 @@
         }
     </script>
     <style>
-        #picker { 
-            width: 300px; 
-            height: 1800px; 
+        body {
+            padding: 0px;
+            margin: 0px;
+            font-family: 'Armata', sans-serif;
+            background-image: url('bg.png');
         }
 
         #wrapper {
-            margin: auto;
-            width: 300px; 
+            width: 100%; 
+            background-color: #EEE;
         }
+
+        #header {
+            -moz-box-shadow: 0px 0px 6px #666;
+            -webkit-box-shadow: 0px 0px 6px #666;
+            box-shadow: 0px 0px 6px #666;
+        }
+
+        #header h1 { 
+            padding: 4px 10px 4px 10px;
+            margin: 0px;
+            background-color: #000;
+            color: #FFF;
+            font-size: 20px;
+        }
+
+        #footer {
+            height: 20px;
+            text-align: right;
+            font-size: 10px;
+            padding: 0px 10px 0px 10px;
+        }
+
+        #picker {
+            padding: 10px;
+            margin-bottom: 6px;
+            -moz-box-shadow: 0px 0px 6px #666;
+            -webkit-box-shadow: 0px 0px 6px #666;
+            box-shadow: 0px 0px 6px #666;
+        }
+
     </style>
 </head>
 <body>
     <div id="wrapper">
-        <canvas id="picker" width="300px" height="1800px"></canvas>
+        <div id="header">
+            <h1>Colour Picker</h1>
+        </div>
+        <div id="picker"></div>
+    </div>
+    <div id="footer">
+        Made by <a href="http://www.hughgallagher.co.uk">Hugh Gallagher</a>
     </div>
 </body>
 </html>
