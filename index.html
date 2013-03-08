@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>HTML Colour Picker</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <!--[if lt IE 9]>
+        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <script type="text/javascript">
+        $(document).ready( function(){
+                var canvas  = $("#picker")[0];
+                var context = canvas.getContext("2d");
+                var x = 0, y = 0;
+                var tileSize = 50;
+
+                var webSafe = webSafeColours();
+
+                $.each( webSafe, function( i, colour ){
+                    var hexColour = rgbToHex( colour[0], colour[1], colour[2] );
+                    context.fillStyle = hexColour;
+                    context.fillRect( x, y, tileSize, tileSize );
+                    context.fillStyle = ( lightOrDark( colour[0], colour[1], colour[2] ) === 'light' ) ? '#000' : '#FFF';
+                    context.font="10px Courier";
+                    context.fillText( i + 1, x + 3 , y + 10);
+                    context.fillText( hexColour, x + 4 , y + 30);
+
+                    if( x >= $("#picker").width() ){
+                        y += tileSize;
+                        x = 0;
+                    }
+                    else{
+                        x += tileSize;
+                    }
+                });
+        });
+
+        function webSafeColours(){
+            var colours = [];
+
+            for( var red = 255; red >= 0; red -= 51 ){
+                for( var green = 255; green >= 0; green -= 51 ){
+                    for( var blue = 255; blue >= 0; blue -= 51 ){
+                        colours.push( [ red, green, blue ] );
+                    }
+                }
+            }
+
+            return colours.sort( function(a,b){
+                return rgbToHsv(a[0], a[1], a[0])[2] - rgbToHsv(b[0], b[1], b[0])[2];
+            });
+        }
+
+        function rgbToHex( r, g, b ){
+            var colour = '#',
+                hr     = ( 0 + r.toString(16) ).substr(-2),
+                hg     = ( 0 + g.toString(16) ).substr(-2),
+                hb     = ( 0 + b.toString(16) ).substr(-2);
+
+            if ( hr.charAt(0) === hr.charAt(1) &&
+                 hg.charAt(0) === hg.charAt(1) &&
+                 hb.charAt(0) === hb.charAt(1)    ){
+                colour += hr.charAt(0) + hg.charAt(0) + hb.charAt(0);
+            }
+            else{
+                colour += hr + hg + hb;
+            }
+
+            return colour.toUpperCase();
+        }
+
+        function rgbToHsv(r, g, b){
+            r = r/255, g = g/255, b = b/255;
+            var max = Math.max(r, g, b), min = Math.min(r, g, b);
+            var h, s, v = max;
+        
+            var d = max - min;
+            s = max == 0 ? 0 : d / max;
+        
+            if(max == min){
+                h = 0; // achromatic
+            }else{
+                switch(max){
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+        
+            return [h, s, v];
+        }
+
+        function lightOrDark (r, g, b) {
+            var brightness = (r * 299) + (g * 587) + (b * 114);
+            brightness = brightness / 255000;
+            return ( brightness >= 0.5 ) ? 'light' : 'dark';
+        }
+    </script>
+    <style>
+        #picker { 
+            width: 800px; 
+            height: 800px; 
+        }
+
+        #wrapper {
+            margin: auto;
+            width: 800px; 
+        }
+    </style>
+</head>
+<body>
+    <div id="wrapper">
+        <canvas id="picker" width="800px" height="800px"></canvas>
+    </div>
+</body>
+</html>
