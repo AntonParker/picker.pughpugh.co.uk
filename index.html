@@ -15,29 +15,48 @@
         $(document).ready( function(){
                 var canvas  = $("#picker")[0];
                 var context = canvas.getContext("2d");
-                var x = 0, y = 0;
-                var tileSize = 50;
+                var x = 0, y = 0, offset = 0;
+                var tileSize = 20;
 
                 var webSafe = webSafeColours();
 
                 $.each( webSafe, function( i, colour ){
                     var hexColour = rgbToHex( colour[0], colour[1], colour[2] );
-                    context.fillStyle = hexColour;
-                    context.fillRect( x, y, tileSize, tileSize );
-                    context.fillStyle = ( lightOrDark( colour[0], colour[1], colour[2] ) === 'light' ) ? '#000' : '#FFF';
-                    context.font="10px Courier";
-                    context.fillText( i + 1, x + 3 , y + 10);
-                    context.fillText( hexColour, x + 4 , y + 30);
 
-                    if( x >= $("#picker").width() ){
-                        y += tileSize;
-                        x = 0;
-                    }
-                    else{
-                        x += tileSize;
+                    drawHexagon(context, hexColour, x, y, tileSize );
+
+                    x += tileSize * 3;
+
+                    if( x >= $("#picker").width() - tileSize * 2 ){
+                        y += tileSize - 3;
+                        offset = ( offset === 0 ) ? 1.5 : 0;
+                        x = tileSize * offset;
                     }
                 });
         });
+
+        function drawHexagon(ctx, colour, x, y, size){
+            var numberOfSides = 6,
+                Xcenter = x + size,
+                Ycenter = y + size;
+            
+            ctx.beginPath();
+            ctx.moveTo (Xcenter +  size * Math.cos(0), Ycenter +  size *  Math.sin(0));          
+            
+            for (var i = 1; i <= numberOfSides;i += 1) {
+                ctx.lineTo (Xcenter + size * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(i * 2 * Math.PI / numberOfSides));
+            }
+            
+            ctx.fillStyle = colour;
+            ctx.fill();
+        }
+
+        function drawSquare(ctx, colour, x, y , size){
+            ctx.fillStyle = colour;
+            ctx.fillRect( x, y, size, size );
+            ctx.font="10px Courier";
+            ctx.fillText( colour, x + 2 , y + 2);
+        }
 
         function webSafeColours(){
             var colours = [];
@@ -49,7 +68,7 @@
                     }
                 }
             }
-
+            return colours;
             return colours.sort( function(a,b){
                 return rgbToHsv(a[0], a[1], a[0])[2] - rgbToHsv(b[0], b[1], b[0])[2];
             });
@@ -103,19 +122,19 @@
     </script>
     <style>
         #picker { 
-            width: 800px; 
-            height: 800px; 
+            width: 300px; 
+            height: 1800px; 
         }
 
         #wrapper {
             margin: auto;
-            width: 800px; 
+            width: 300px; 
         }
     </style>
 </head>
 <body>
     <div id="wrapper">
-        <canvas id="picker" width="800px" height="800px"></canvas>
+        <canvas id="picker" width="300px" height="1800px"></canvas>
     </div>
 </body>
 </html>
