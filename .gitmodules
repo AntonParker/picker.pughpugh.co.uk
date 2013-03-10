@@ -1,0 +1,3 @@
+[submodule "js/colour.js"]
+	path = js/colour.js
+	url = https://github.com/pughpugh/colour.js.git

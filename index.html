@@ -6,6 +6,7 @@
     <meta name="description" content="">
     <meta name="keywords" content="">
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="js/colour.js/colour.js"></script>
     <link href='http://fonts.googleapis.com/css?family=Armata' rel='stylesheet' type='text/css'>
 
     <!--[if lt IE 9]>
@@ -68,8 +69,6 @@
         function drawPolygon(ctx, sides, colour, x, y, size){
             var Xcenter = x + size,
                 Ycenter = y + size;
-
-            var hexColour = rgbToHex( colour[0], colour[1], colour[2] );
             
             ctx.save(); 
             ctx.beginPath();
@@ -81,7 +80,7 @@
 
             ctx.shadowBlur  = 4;
             ctx.shadowColor = '#999';
-            ctx.fillStyle   = hexColour;
+            ctx.fillStyle   = colour.HEX();
             ctx.strokeStyle = "#000000";
             ctx.lineWidth   = 1;
 
@@ -92,9 +91,9 @@
             ctx.font         = Math.ceil(size / 2.5) + "px Courier";
             ctx.textAlign    = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle    = ( lightOrDark(  colour[0], colour[1], colour[2] ) === 'dark' ) ? '#FFF' : '#000' ;
+            ctx.fillStyle    = ( colour.lightOrDark() === 'dark' ) ? '#FFF' : '#000' ;
 
-            ctx.fillText( hexColour, x + size , y + size );
+            ctx.fillText( colour.HEX(), x + size , y + size );
         }
 
         function drawSquare(ctx, colour, x, y , size){
@@ -105,65 +104,21 @@
         }
 
         function webSafeColours(){
-            var colours = [];
+            var c, colours = [];
 
             for( var red = 255; red >= 0; red -= 51 ){
                 for( var green = 255; green >= 0; green -= 51 ){
                     for( var blue = 255; blue >= 0; blue -= 51 ){
-                        colours.push( [ red, green, blue ] );
+                        c = new Colour('RGB', { r: red, g: green, b: blue });
+                        colours.push( c );
                     }
                 }
             }
-            return colours.sort( function(b,a){
-                return rgbToHsv(a[0], a[1], a[0])[2] - rgbToHsv(b[0], b[1], b[0])[2];
+            return colours.sort( function(a,b){
+                return b.HSV().v - a.HSV().v;
             });
         }
 
-        function rgbToHex( r, g, b ){
-            var colour = '#',
-                hr     = ( 0 + r.toString(16) ).substr(-2),
-                hg     = ( 0 + g.toString(16) ).substr(-2),
-                hb     = ( 0 + b.toString(16) ).substr(-2);
-
-            if ( hr.charAt(0) === hr.charAt(1) &&
-                 hg.charAt(0) === hg.charAt(1) &&
-                 hb.charAt(0) === hb.charAt(1)    ){
-                colour += hr.charAt(0) + hg.charAt(0) + hb.charAt(0);
-            }
-            else{
-                colour += hr + hg + hb;
-            }
-
-            return colour.toUpperCase();
-        }
-
-        function rgbToHsv(r, g, b){
-            r = r/255, g = g/255, b = b/255;
-            var max = Math.max(r, g, b), min = Math.min(r, g, b);
-            var h, s, v = max;
-        
-            var d = max - min;
-            s = max == 0 ? 0 : d / max;
-        
-            if(max == min){
-                h = 0; // achromatic
-            }else{
-                switch(max){
-                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                    case g: h = (b - r) / d + 2; break;
-                    case b: h = (r - g) / d + 4; break;
-                }
-                h /= 6;
-            }
-        
-            return [h, s, v];
-        }
-
-        function lightOrDark (r, g, b) {
-            var brightness = (r * 299) + (g * 587) + (b * 114);
-            brightness = brightness / 255000;
-            return ( brightness >= 0.5 ) ? 'light' : 'dark';
-        }
     </script>
     <style>
         body {
