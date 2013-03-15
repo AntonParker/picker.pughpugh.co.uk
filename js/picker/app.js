@@ -5,7 +5,7 @@ Picker.app = (function($){
 
         init: function(){
             var width   = $(window).width()  - 20,
-                height  = $(window).height() - 100,
+                height  = $(window).height() - 70,
                 wrapper = $('#picker');
 
             wrapper.append('<canvas id="pickerCanvas" width="'+width+'px" height="'+height+'px"></canvas>');
