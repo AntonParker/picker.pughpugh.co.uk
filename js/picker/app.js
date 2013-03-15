@@ -10,6 +10,7 @@ Picker.app = (function($){
 
             wrapper.append('<canvas id="pickerCanvas" width="'+width+'px" height="'+height+'px"></canvas>');
 
+            this.getSwatches();
             this.doLayout();
 
             var resizeTimer;
@@ -17,10 +18,26 @@ Picker.app = (function($){
             $(window).resize($.proxy( function () {
                 clearTimeout(resizeTimer);
                 resizeTimer = setTimeout( $.proxy( function(){
+                    this.getSwatches();
                     this.clearLayout();
                     this.doLayout();   
                 }, this), 100);
             }, this));
+
+            var canvas = $("#pickerCanvas")[0];
+            var rect   = canvas.getBoundingClientRect();
+
+            canvas.addEventListener('click', $.proxy( function(e){
+                    var x = e.x - rect.left,
+                        y = e.y - rect.top;
+
+                    $.each( this.swatches, $.proxy( function(i, s){
+                        if( s.isTarget( x, y ) ){
+                            console.log('click ' + s.colour.HEX() );
+                            return false;
+                        }
+                    }, this));
+            }, this), false);
         },
 
         clearLayout: function(){
@@ -31,21 +48,33 @@ Picker.app = (function($){
 
         doLayout: function(){
             var width   = $(window).width()  - 20,
-                height  = $(window).height() - 100;
-
-            var canvas   = $("#pickerCanvas")[0],
-                context  = canvas.getContext("2d");
-                tileSize = Math.floor( Math.sqrt( ( ( width * height ) / 216 ) ) * 0.485 ),
-                offset   = 0,
-                x = y = 1;
+                height  = $(window).height() - 100,
+                canvas  = $("#pickerCanvas")[0],
+                context = canvas.getContext("2d");
 
             context.canvas.width  = width;
             context.canvas.height = height;
 
-            var colours = this.webSafeColours();
+            $.each( this.swatches, $.proxy( function( i, swatch ){
+                swatch.draw();
+            }, this));
+        },
+
+        getSwatches: function(){
+            var width   = $(window).width()  - 20,
+                height  = $(window).height() - 100;
+
+            var canvas   = $("#pickerCanvas")[0],
+                context  = canvas.getContext("2d");
+                offset   = 0,
+                x = y = 1;
+
+            var tileSize = Math.floor( Math.sqrt( ( ( width * height ) / 216 ) ) * 0.485 ),
+                colours = this.webSafeColours();
+
+            this.swatches = [];
 
             $.each( colours, $.proxy( function( i, colour ){
-
                 var swatch = new Picker.Swatch({
                     colour: colour,
                     format: 'RGB',
@@ -55,7 +84,7 @@ Picker.app = (function($){
                     ctx: context
                 });
 
-                swatch.draw();
+                this.swatches.push( swatch );
 
                 x += tileSize * 3.6;
 
@@ -74,12 +103,13 @@ Picker.app = (function($){
                 for( var green = 255; green >= 0; green -= 51 ){
                     for( var blue = 255; blue >= 0; blue -= 51 ){
                         c = { r: red, g: green, b: blue };
-                        colours.push( c );
+                        colours.push( new Colour( 'RGB', c ) );
                     }
                 }
             }
-            return colours;
+            return colours.sort( function(a,b){
+                return b.HSV().h - a.HSV().h;
+            });
         }
-
     }
 })(jQuery);
